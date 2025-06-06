@@ -1,98 +1,95 @@
-return unless Package.templating and Package.spacebars
+# Delay registration until the environment is fully ready
+Meteor.startup ->
 
-Template = Package.templating.Template
-Spacebars = Package.spacebars.Spacebars
+  return unless Package.templating?.Template and Package.spacebars?.Spacebars
 
-isActive = (type, inverse = false) ->
-  helperName = 'is'
-  helperName += 'Not' if inverse
-  helperName += "Active#{type}"
+  Template = Package.templating.Template
+  Spacebars = Package.spacebars.Spacebars
 
-  (options = {}, attributes = {}) ->
-    if Match.test options, Spacebars.kw
-      options = options.hash
+  isActive = (type, inverse = false) ->
+    helperName = 'is'
+    helperName += 'Not' if inverse
+    helperName += "Active#{type}"
 
-    if Match.test attributes, Spacebars.kw
-      attributes = attributes.hash
+    (options = {}, attributes = {}) ->
+      if Match.test options, Spacebars.kw
+        options = options.hash
 
-    if Match.test options, String
-      if share.config.equals 'regex', true
-        options =
-          regex: options
+      if Match.test attributes, Spacebars.kw
+        attributes = attributes.hash
 
-      else if type is 'Path'
-        options =
-          path: options
+      if Match.test options, String
+        if share.config.equals 'regex', true
+          options =
+            regex: options
 
+        else if type is 'Path'
+          options =
+            path: options
+
+        else
+          options =
+            name: options
+
+      options = _.defaults attributes, options
+
+      pattern = Match.ObjectIncluding
+        class: Match.Optional String
+        className: Match.Optional String
+        regex: Match.Optional Match.OneOf RegExp, String
+        name: Match.Optional String
+        path: Match.Optional String
+
+      check options, pattern
+
+      {regex, name, path} = options
+
+      className = options.class ? options.className
+
+      if type is 'Path'
+        name = null
       else
-        options =
-          name: options
+        path = null
 
-    options = _.defaults attributes, options
+      unless regex or name or path
+        t = if type is 'Route' then 'name' else type
+        t = t.toLowerCase()
+        console.error "Invalid argument, #{helperName} takes \"#{t}\", " +
+          "#{t}=\"#{t}\" or regex=\"regex\""
+        return false
 
-    pattern = Match.ObjectIncluding
-      class: Match.Optional String
-      className: Match.Optional String
-      regex: Match.Optional Match.OneOf RegExp, String
-      name: Match.Optional String
-      path: Match.Optional String
+      if Match.test regex, String
+        if share.config.equals 'caseSensitive', false
+          regex = new RegExp regex, 'i'
+        else
+          regex = new RegExp regex
 
-    check options, pattern
+      regex ?= name or path
 
-    {regex, name, path} = options
-
-    className = options.class ? options.className
-
-    if type is 'Path'
-      name = null
-
-    else
-      path = null
-
-    unless regex or name or path
-      t = if type is 'Route' then 'name' else type
-      t = t.toLowerCase()
-      console.error "Invalid argument, #{helperName} takes \"#{t}\", " +
-        "#{t}=\"#{t}\" or regex=\"regex\""
-      return false
-
-    if Match.test regex, String
-      if share.config.equals 'caseSensitive', false
-        regex = new RegExp regex, 'i'
-
+      if inverse
+        className ?= share.config.get 'disabledClass'
       else
-        regex = new RegExp regex
+        className ?= share.config.get 'activeClass'
 
-    regex ?= name or path
+      isPath = true if type is 'Path'
 
-    if inverse
-      className ?= share.config.get 'disabledClass'
-    else
-      className ?= share.config.get 'activeClass'
+      if isPath
+        result = ActiveRoute.path regex
+      else
+        options = _.defaults attributes, attributes.data
+        result = ActiveRoute.name regex, _.omit options, [
+          'class', 'className', 'data'
+          'regex', 'name', 'path'
+        ]
 
-    isPath = true if type is 'Path'
+      result = not result if inverse
 
-    if isPath
-      result = ActiveRoute.path regex
+      if result then className else false
 
-    else
-      options = _.defaults attributes, attributes.data
-      result = ActiveRoute.name regex, _.omit options, [
-        'class', 'className', 'data'
-        'regex', 'name', 'path'
-      ]
+  helpers =
+    isActiveRoute: isActive 'Route'
+    isActivePath: isActive 'Path'
+    isNotActiveRoute: isActive 'Route', true
+    isNotActivePath: isActive 'Path', true
 
-    result = not result if inverse
-
-    if result then className else false
-
-helpers =
-  isActiveRoute: isActive 'Route'
-
-  isActivePath: isActive 'Path'
-
-  isNotActiveRoute: isActive 'Route', true
-
-  isNotActivePath: isActive 'Path', true
-
-Template.registerHelper name, func for own name, func of helpers
+  Template.registerHelper name, func for own name, func of helpers
