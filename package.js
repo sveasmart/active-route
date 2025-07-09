@@ -1,12 +1,12 @@
 Package.describe({
-  git     : "https://github.com/sylido/active-route.git",
-  name    : "sylido:active-route",
+  git     : "https://github.com/meteor-activeroute/legacy.git",
+  name    : "zimme:active-route",
   summary : "Active route helpers",
-  version : "2.4.0"
+  version : "2.4.1"
 });
 
 Package.onUse(function(api) {
-  api.versionsFrom("METEOR@3.2.2");
+  api.versionsFrom("METEOR@2.16");
 
   api.use([
     "check",
@@ -18,7 +18,7 @@ Package.onUse(function(api) {
   api.use([
     "kadira:flow-router@2.0.0",
     "meteorhacks:flow-router@1.8.0",
-    "polygonwood:router@2.0.0"
+    "vlasky:galvanized-iron-router:router@2.0.1"
   ], { weak : true });
 
   // made templating a non-weak dependency
@@ -32,7 +32,7 @@ Package.onUse(function(api) {
 });
 
 Package.onTest(function(api) {
-  api.versionsFrom("METEOR@3.2.2");
+  api.versionsFrom("METEOR@2.16");
 
   api.use([
     "check",
