@@ -1,8 +1,8 @@
 {
   "devDependencies": {
-    "spacejam": "^1.2.2"
+    "spacejam": "^1.6.1"
   },
   "scripts": {
-    "test": "node_modules/.bin/spacejam test-packages --driver-package practicalmeteor:mocha-console-reporter ./"
+    "test": "node_modules/.bin/spacejam test-packages --driver-package meteortesting:mocha:mocha-console-reporter ./"
   }
 }
