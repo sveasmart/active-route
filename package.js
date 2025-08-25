@@ -25,9 +25,8 @@ Package.onUse(function(api) {
 
   api.export("ActiveRoute");
 
-  api.addFiles("lib/activeroute.js");
-
-  api.addFiles("client/helpers.js", "client");
+  api.addFiles("lib/activeroute.js", ["client", "server"]);
+  api.mainModule("client/helpers.js", "client");
 });
 
 Package.onTest(function(api) {
